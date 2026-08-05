@@ -1,0 +1,12 @@
+<!-- 자체 제작 파비콘: 게임 컨셉(동물 얼굴)을 단순화한 원형 얼굴 (외부 저작물 아님) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 얼굴 -->
+  <circle cx="32" cy="32" r="28" fill="#f2a65a"/>
+  <!-- 눈 -->
+  <circle cx="22" cy="27" r="4" fill="#3a2b1e"/>
+  <circle cx="42" cy="27" r="4" fill="#3a2b1e"/>
+  <!-- 코 -->
+  <ellipse cx="32" cy="38" rx="5" ry="4" fill="#3a2b1e"/>
+  <!-- 입 -->
+  <path d="M32 42 q-6 6 -11 2 M32 42 q6 6 11 2" stroke="#3a2b1e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</svg>

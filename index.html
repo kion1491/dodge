@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <!-- viewport-fit=cover: iOS 세이프에어리어(env(safe-area-inset-*)) 활성화에 필수 -->
+  <!-- maximum-scale=1, user-scalable=no: 더블탭·핀치 줌 차단 (게임 특성상 의도된 설정, touch-action과 이중 방어) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+  <title>강아지·고양이 닷지</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- 게임 전체 컨테이너: 캔버스(게임 필드)와 DOM 오버레이(화면 전환 UI)를 함께 담는다 -->
+  <div class="game" id="game">
+    <!-- 게임 필드: 논리 좌표계 720×1280을 스케일해 그리는 캔버스 -->
+    <canvas class="game__canvas" id="game-canvas"></canvas>
+
+    <!-- 캐릭터 선택 화면 (초기 화면) — 하단 배너 있음 (PRD 5장) -->
+    <div class="game__overlay game__overlay--select" id="screen-select" hidden>
+      <div class="select">
+        <h1 class="select__title">캐릭터 선택</h1>
+        <!-- 이전 최고 기록 (기록이 있을 때만 표시 — 재도전 동기 부여) -->
+        <p class="select__best" id="select-best" hidden>
+          최고 기록 <span class="select__best-value" id="select-best-value">0.00</span>초
+        </p>
+        <!-- 캐릭터 6종 그리드 (2열×3행) — 슬롯은 ui.js가 생성 -->
+        <ul class="select__grid" id="select-grid"></ul>
+      </div>
+      <!-- 광고 미로드 시에도 레이아웃이 무너지지 않는 고정 높이 컨테이너 -->
+      <div class="banner" id="banner-home">
+        <!-- ADSENSE_SLOT_HOME -->
+      </div>
+    </div>
+
+    <!-- GAME START 대기 화면 — 광고 없음 (PRD 3.2) -->
+    <div class="game__overlay game__overlay--ready" id="screen-ready" hidden>
+      <div class="ready">
+        <p class="ready__title">GAME START</p>
+        <p class="ready__hint">화면을 눌러 시작</p>
+      </div>
+    </div>
+
+    <!-- 게임오버 오버레이 — dimmed + 기록 + 버튼 + 하단 배너 (PRD 3.4) -->
+    <div class="game__overlay game__overlay--gameover" id="screen-gameover" hidden>
+      <div class="gameover">
+        <p class="gameover__current">이번 기록: <span id="gameover-current">0.00</span>초</p>
+        <p class="gameover__best">
+          최고 기록: <span id="gameover-best">0.00</span>초
+          <span class="gameover__new-record" id="gameover-new-record" hidden>신기록!</span>
+        </p>
+        <!-- 0.8초 입력 잠금 동안 페이드인으로 서서히 나타나는 버튼 영역 (PRD 3.4) -->
+        <div class="gameover__actions gameover__actions--locked" id="gameover-actions">
+          <button class="gameover__restart" id="gameover-restart" type="button" disabled>RESTART</button>
+          <button class="gameover__home" id="gameover-home" type="button" disabled>초기화면으로</button>
+        </div>
+      </div>
+      <!-- 배너는 dimmed 레이어 위에 렌더 (PRD 3.4) -->
+      <div class="banner" id="banner-gameover">
+        <!-- ADSENSE_SLOT_GAMEOVER -->
+      </div>
+    </div>
+
+    <!-- 일시정지 오버레이 (PRD 4.6) -->
+    <div class="game__overlay game__overlay--paused" id="screen-paused" hidden>
+      <div class="paused">
+        <p class="paused__title">PAUSED</p>
+        <!-- 기기 입력 방식에 맞는 문구를 main.js가 채운다 -->
+        <p class="paused__hint" id="paused-hint"></p>
+      </div>
+    </div>
+
+    <!-- 가로 모드 안내 오버레이 (PRD 2장) — 상태 머신과 독립적으로 최상단 표시 -->
+    <div class="game__overlay game__overlay--rotate" id="screen-rotate" hidden>
+      <div class="rotate">
+        <div class="rotate__phone"></div>
+        <p class="rotate__title">세로로 돌려주세요</p>
+        <p class="rotate__desc">이 게임은 세로 화면 전용입니다</p>
+      </div>
+    </div>
+
+    <!-- 조이스틱 가이드 — 페이지 로드당 첫 게임 시작 시 1회, 우하단 반투명 힌트 (PRD 4.1) -->
+    <div class="game__guide" id="joystick-guide" hidden>
+      <div class="game__guide-ring"><div class="game__guide-knob"></div></div>
+      <p class="game__guide-text">아무 곳이나 터치해서 조작</p>
+    </div>
+  </div>
+
+  <!-- 게임 진입점 스크립트 (ES 모듈) -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

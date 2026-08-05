@@ -1,0 +1,407 @@
+/* 상단 세이프에어리어 값을 JS(HUD 오프셋 계산)에서 읽기 위한 CSS 변수 */
+:root {
+  --safe-area-top: env(safe-area-inset-top, 0px);
+}
+
+/* 전역 기본 스타일 — 모바일 게임용 브라우저 기본 동작 차단 */
+html {
+  /* 당겨서 새로고침(pull-to-refresh) 등 오버스크롤 효과 방지 */
+  overscroll-behavior: none;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  /* iOS 사파리 주소창 높이 변화에 대응하는 동적 뷰포트 단위 */
+  height: 100dvh;
+  overflow: hidden;
+}
+
+body {
+  /* 터치 스크롤·더블탭 줌 등 브라우저 기본 터치 동작 차단 */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  /* 터치 시 파란 하이라이트 제거, 롱프레스 컨텍스트 메뉴 방지 (모바일 게임 UX) */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* 게임 전체 컨테이너 — 필드(캔버스)를 화면 중앙에 배치 */
+.game {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* PC 와이드 화면의 좌우 여백: 은은한 단색 배경 (추후 확장용으로 비워둠) */
+  background-color: #23232b;
+  /* 컨테이너·오버레이 영역까지 터치 기본 동작 차단 범위 확대 */
+  touch-action: none;
+}
+
+/* 게임 필드 캔버스 — 실제 픽셀 크기는 viewport.js가 논리 좌표 720×1280 기준으로 계산해 지정 */
+.game__canvas {
+  /* inline 기본값의 하단 베이스라인 여백 제거 (overflow: hidden과 결합 시 잘림 방지) */
+  display: block;
+  background-color: #f4efe6;
+}
+
+/* 화면 전환용 오버레이 공통 — 필드 위를 덮는 레이어 (내용은 Session 4에서 구현) */
+.game__overlay {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+}
+
+/* hidden 속성이 flex 등 display 지정에 밀려 무시되지 않도록 보강 */
+[hidden] {
+  display: none !important;
+}
+
+/* ============================================================
+   화면 오버레이 공통 폰트
+   ============================================================ */
+.game__overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #3b3630;
+}
+
+/* ============================================================
+   캐릭터 선택 화면 (초기 화면)
+   ============================================================ */
+.game__overlay--select {
+  background-color: #f4efe6;
+  justify-content: center;
+}
+
+.select {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+}
+
+.select__title {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: 0.06em;
+}
+
+.select__best {
+  margin: 0;
+  font-size: 16px;
+  color: #8a8577;
+}
+
+.select__best-value {
+  font-weight: 700;
+  color: #d1841f;
+}
+
+/* 캐릭터 그리드: 2열 × 3행 */
+.select__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+.select__slot {
+  box-sizing: border-box;
+  width: 108px;
+  height: 108px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid transparent;
+  border-radius: 20px;
+  background-color: rgba(0, 0, 0, 0.04);
+  padding: 8px;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+
+/* 선택된 캐릭터 하이라이트 */
+.select__slot--active {
+  border-color: #d1841f;
+  background-color: rgba(209, 132, 31, 0.12);
+  transform: scale(1.05);
+}
+
+/* 캔버스 표시 크기를 내부 논리 크기(88px)와 일치시켜 왜곡 없이 렌더 */
+.select__slot-canvas {
+  display: block;
+  width: 88px;
+  height: 88px;
+}
+
+/* ============================================================
+   GAME START 대기 화면 — 필드가 비쳐 보이는 투명 오버레이
+   ============================================================ */
+.game__overlay--ready {
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* READY 블록 — 다른 화면(.select/.gameover)과 동일한 BEM 블록 패턴 */
+.ready {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ready__title {
+  margin: 0;
+  font-size: 52px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #4a443c;
+  text-shadow: 0 2px 8px rgba(255, 255, 255, 0.7);
+}
+
+.ready__hint {
+  margin: 14px 0 0;
+  font-size: 16px;
+  color: #8a8577;
+}
+
+/* ============================================================
+   게임오버 오버레이 — dimmed 위에 기록·버튼, 그 위에 배너
+   ============================================================ */
+.game__overlay--gameover {
+  background-color: rgba(20, 18, 24, 0.62); /* dimmed */
+  justify-content: center;
+  color: #f4efe6;
+}
+
+.gameover {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  /* '초기화면으로' 버튼과 하단 배너 사이 최소 48px 간격 확보 (애드센스 정책 리스크 회피) */
+  padding-bottom: 48px;
+}
+
+.gameover__current {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.gameover__best {
+  margin: 0;
+  font-size: 18px;
+  color: rgba(244, 239, 230, 0.85);
+}
+
+.gameover__new-record {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background-color: #e0526a;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  animation: newRecordPulse 0.9s ease-in-out infinite;
+}
+
+@keyframes newRecordPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+
+/* 버튼 영역 — 0.8초 입력 잠금을 페이드인으로 표현 */
+.gameover__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  margin-top: 26px;
+  opacity: 1;
+  transition: opacity 0.45s ease;
+}
+
+.gameover__actions--locked {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gameover__restart {
+  border: none;
+  background: none;
+  padding: 10px 34px;
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #f4efe6;
+  cursor: pointer;
+}
+
+.gameover__home {
+  border: none;
+  background: none;
+  padding: 8px 16px;
+  font-size: 16px;
+  color: rgba(244, 239, 230, 0.75);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ============================================================
+   일시정지 오버레이 (PRD 4.6)
+   ============================================================ */
+.game__overlay--paused {
+  background-color: rgba(20, 18, 24, 0.62); /* dimmed */
+  justify-content: center;
+  color: #f4efe6;
+  cursor: pointer;
+}
+
+.paused {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.paused__title {
+  margin: 0;
+  font-size: 52px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.paused__hint {
+  margin: 16px 0 0;
+  font-size: 16px;
+  color: rgba(244, 239, 230, 0.8);
+}
+
+/* ============================================================
+   가로 모드 안내 오버레이 — 모든 화면 위 최상단 (PRD 2장)
+   ============================================================ */
+.game__overlay--rotate {
+  background-color: #23232b;
+  justify-content: center;
+  color: #f4efe6;
+  z-index: 100; /* 다른 모든 오버레이보다 위 */
+}
+
+.rotate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+/* 세로 폰 실루엣 — 회전을 유도하는 간단한 CSS 도형 (외부 저작물 아님) */
+.rotate__phone {
+  width: 44px;
+  height: 76px;
+  border: 4px solid #f4efe6;
+  border-radius: 10px;
+  animation: rotatePhoneNudge 1.6s ease-in-out infinite;
+}
+
+@keyframes rotatePhoneNudge {
+  0%, 100% { transform: rotate(-90deg); opacity: 0.45; }
+  50% { transform: rotate(0deg); opacity: 1; }
+}
+
+.rotate__title {
+  margin: 8px 0 0;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.rotate__desc {
+  margin: 0;
+  font-size: 15px;
+  color: rgba(244, 239, 230, 0.7);
+}
+
+/* ============================================================
+   조이스틱 가이드 — 우하단 반투명 힌트, 페이드인 후 자동 페이드아웃
+   ============================================================ */
+.game__guide {
+  position: absolute;
+  right: 26px;
+  bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none; /* 힌트가 터치를 가로채지 않도록 */
+  color: rgba(59, 54, 48, 0.75);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.game__guide--visible {
+  opacity: 1;
+}
+
+.game__guide-ring {
+  width: 84px;
+  height: 84px;
+  border: 4px solid rgba(59, 54, 48, 0.4);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game__guide-knob {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: rgba(59, 54, 48, 0.45);
+  animation: guideKnobDrag 1.4s ease-in-out infinite;
+}
+
+@keyframes guideKnobDrag {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(16px, 0); }
+  50% { transform: translate(0, 0); }
+  75% { transform: translate(-16px, 0); }
+}
+
+.game__guide-text {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* ============================================================
+   광고 배너 컨테이너 — 로드 실패/미승인 시에도 고정 높이 유지 (PRD 5장)
+   ============================================================ */
+.banner {
+  flex: none;
+  width: 100%;
+  height: 50px;
+  background-color: rgba(0, 0, 0, 0.08);
+  /* 게임오버 dimmed 레이어 위에 오도록 보장 */
+  position: relative;
+  z-index: 10;
+}
+
+/* 세이프에어리어: 하단 홈 인디케이터 영역만큼 배너·버튼을 위로 올린다 (PRD 2장) */
+.game__overlay--select,
+.game__overlay--gameover {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
