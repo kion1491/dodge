@@ -1,2 +1,5 @@
 # macOS 시스템 파일
 .DS_Store
+
+# 기획 문서 (저장소에 노출하지 않음)
+dodge-game-prd.md
