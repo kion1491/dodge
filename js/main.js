@@ -539,7 +539,8 @@ function updateOrientationOverlay() {
 
 // --- 초기화 및 루프 시작 ---
 initViewport(canvas, container);
-initInput(container, { onSpace: handleSpaceKey });
+// Enter는 READY 화면에서만 동작 (handleStartGame 내부에서 상태 가드)
+initInput(container, { onSpace: handleSpaceKey, onEnter: handleStartGame });
 initUi({
   onSelectCharacter: handleSelectCharacter,
   onStartGame: handleStartGame,

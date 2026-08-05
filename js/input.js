@@ -12,8 +12,10 @@ const keyState = {
   right: false,
 };
 
-// 스페이스바가 눌렸을 때 호출될 콜백 (일시정지 토글 — Session 5에서 연결)
+// 스페이스바가 눌렸을 때 호출될 콜백 (일시정지 토글)
 let onSpaceCallback = null;
+// Enter 키가 눌렸을 때 호출될 콜백 (READY 화면 게임 시작)
+let onEnterCallback = null;
 
 // --- 플로팅 조이스틱 상태 ---
 // 화면 어디를 터치해도 그 지점이 중심이 되고, 드래그 방향으로 이동 (PRD 4.1)
@@ -48,6 +50,10 @@ function handleKeyDown(event) {
       event.preventDefault();
       // 길게 누를 때의 키 반복(repeat)은 무시 — 일시정지 연타 토글 방지
       if (onSpaceCallback && !event.repeat) onSpaceCallback();
+      return;
+    case 'Enter':
+      // 길게 누를 때의 키 반복(repeat)은 무시
+      if (onEnterCallback && !event.repeat) onEnterCallback();
       return;
     default:
       return;
@@ -155,8 +161,9 @@ function resetJoystick() {
 // --- 공개 API ---
 
 // 입력 리스너 등록 (게임 초기화 시 1회 호출)
-export function initInput(targetEl, { onSpace } = {}) {
+export function initInput(targetEl, { onSpace, onEnter } = {}) {
   onSpaceCallback = onSpace || null;
+  onEnterCallback = onEnter || null;
   window.addEventListener('keydown', handleKeyDown);
   window.addEventListener('keyup', handleKeyUp);
   // CSS touch-action: none 하에서 preventDefault 없이도 스크롤은 차단되지만,
