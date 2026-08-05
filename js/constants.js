@@ -11,7 +11,8 @@ export const FIELD = {
 
 // --- 캐릭터 ---
 export const PLAYER = {
-  SIZE: 72,             // 표시 크기(지름) — 모든 캐릭터 동일 (선택 유불리 금지)
+  // [튜닝 이력] 탄막 게임 스타일 피드백 반영 — 72 → 48 (더 작은 캐릭터)
+  SIZE: 48,             // 표시 크기(지름) — 모든 캐릭터 동일 (선택 유불리 금지)
   SPEED: 320,           // 이동 속도 px/s (대각선은 벡터 정규화)
   HITBOX_RATIO: 0.65,   // 판정원 지름 = 표시 크기 × 65% (귀·털은 스쳐도 안 죽는 영역)
   START_X: 360,         // 시작 위치: 필드 하단 중앙
@@ -29,11 +30,13 @@ export const OBSTACLE = {
   SPEED_START: 220,     // 초기 이동 속도 px/s
   SPEED_MAX: 480,       // 속도 상한 px/s (이후엔 스폰 빈도만 증가)
   SPEED_RAMP_TIME: 90,  // 속도가 초기→상한까지 선형 증가하는 데 걸리는 시간(s) — 튜닝값
-  SPAWN_INTERVAL_START: 0.8,  // 초기 스폰 간격 s
-  SPAWN_INTERVAL_MIN: 0.15,   // 최소 스폰 간격 s
-  SPAWN_RAMP_TIME: 120, // 스폰 간격이 초기→최소까지 선형 점감하는 시간(s) — 튜닝값
-  SIZE_MIN: 32,         // 표시 크기 최소 px
-  SIZE_MAX: 48,         // 표시 크기 최대 px
+  // [튜닝 이력] 탄막 게임 스타일 피드백 반영 — 탄을 작게(32~48 → 16~24), 밀도는 높게
+  // (간격 0.8→0.25, 최소 0.15→0.07, 점감 시간 120→90 — 참고 이미지 밀도에 맞춤)
+  SPAWN_INTERVAL_START: 0.25, // 초기 스폰 간격 s
+  SPAWN_INTERVAL_MIN: 0.07,   // 최소 스폰 간격 s
+  SPAWN_RAMP_TIME: 90,  // 스폰 간격이 초기→최소까지 선형 점감하는 시간(s) — 튜닝값
+  SIZE_MIN: 16,         // 표시 크기 최소 px
+  SIZE_MAX: 24,         // 표시 크기 최대 px
   HITBOX_RATIO: 0.8,    // 판정원 지름 = 표시 크기 × 80%
   SPAWN_GRACE: 1,       // 게임 시작 후 스폰 유예 s (시작 직후 억울한 죽음 방지)
 };
@@ -57,7 +60,8 @@ export const DAMAGE = {
 // --- HP 아이템 (하트) ---
 export const ITEM = {
   FALL_SPEED: 180,       // 낙하 속도 px/s
-  SIZE: 40,              // 표시 크기 px
+  // [튜닝 이력] 캐릭터·탄 축소에 맞춰 40 → 32
+  SIZE: 32,              // 표시 크기 px
   HITBOX_RATIO: 0.8,     // 판정원 지름 = 표시 크기 × 80%
   SPAWN_MIN: 15,         // 스폰 주기 최소 s
   SPAWN_MAX: 25,         // 스폰 주기 최대 s
