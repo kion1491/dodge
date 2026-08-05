@@ -40,7 +40,8 @@ export const OBSTACLE = {
 
 // --- 페이즈형 난이도 (새 패턴 등장 시각) ---
 export const PHASE = {
-  HORIZONTAL_AT: 30,  // 수평 탄 등장 s
+  // [튜닝 이력] 초반 낙하 탄만으로는 지루하다는 피드백으로 30 → 0 (시작부터 수평 탄 등장)
+  HORIZONTAL_AT: 0,   // 수평 탄 등장 s
   DIAGONAL_AT: 60,    // 대각선 탄 등장 s
   WARNING_LEAD: 1.5,  // 새 패턴 등장 몇 초 전에 경고 연출을 시작하는지
 };
