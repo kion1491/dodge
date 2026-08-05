@@ -20,6 +20,7 @@ import {
 import {
   loadBestRecord, saveBestRecord, loadLastCharacter, saveLastCharacter,
 } from './storage.js';
+import { initAds, loadGameoverAd } from './ads.js';
 
 // --- 게임 상태 정의 ---
 export const STATES = {
@@ -137,6 +138,11 @@ export function setState(next) {
 
   // 상태에 맞는 DOM 오버레이 표시 동기화
   syncScreen(currentState);
+
+  // 게임오버 배너 광고는 오버레이가 "표시된 후"에 로드해야 한다 (숨김 상태 로드 실패 방지)
+  if (next === STATES.GAME_OVER) {
+    loadGameoverAd();
+  }
 }
 
 export function getState() {
@@ -584,4 +590,6 @@ updateOrientationOverlay();
 selectHighlightIndex = Math.max(0, CHARACTERS.findIndex((c) => c.id === player.characterId));
 updateSelectScreen(player.characterId, loadBestRecord());
 syncScreen(currentState);
+// 광고 초기화 — 뷰포트(캔버스 크기)와 초기 화면 표시가 끝난 뒤
+initAds();
 requestAnimationFrame(runFrame);

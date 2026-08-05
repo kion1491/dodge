@@ -393,11 +393,45 @@ body {
 .banner {
   flex: none;
   width: 100%;
+  /* 모바일: 320×50 배너 기준 고정 높이 — 광고 미로드 시에도 유지 */
   height: 50px;
   background-color: rgba(0, 0, 0, 0.08);
   /* 게임오버 dimmed 레이어 위에 오도록 보장 */
   position: relative;
   z-index: 10;
+}
+
+/* 넓은 화면: 728×90/970×90 리더보드가 들어갈 수 있게 래퍼를 키움 (반응형 유닛이 맞춰 채움) */
+@media (min-width: 768px) {
+  .banner {
+    height: 90px;
+  }
+}
+
+/* 반응형 광고 유닛은 래퍼 크기를 그대로 따른다 — 크기 결정권은 래퍼(.banner/.game__side-ad)에 있음 */
+.banner__unit {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ============================================================
+   PC 와이드 좌우 여백 사이드 광고 — 여백 폭 실측 후 ads.js가
+   표시 여부·폭(300/160px)·좌우 오프셋을 결정한다
+   ============================================================ */
+.game__side-ad {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 600px;
+  /* 화면 오버레이(선택/게임오버 등)보다 위, 가로모드 안내(100)보다는 아래 */
+  z-index: 50;
+}
+
+.game__side-ad-unit {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 /* 세이프에어리어: 하단 홈 인디케이터 영역만큼 배너·버튼을 위로 올린다 (PRD 2장) */

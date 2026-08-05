@@ -30,9 +30,8 @@
         <ul class="select__grid" id="select-grid"></ul>
       </div>
       <!-- 광고 미로드 시에도 레이아웃이 무너지지 않는 고정 높이 컨테이너 -->
-      <div class="banner" id="banner-home">
-        <!-- ADSENSE_SLOT_HOME -->
-      </div>
+      <!-- ADSENSE_SLOT_HOME (dodge-home) — ins는 ads.js가 로드 시점에 동적 생성 -->
+      <div class="banner" id="banner-home"></div>
     </div>
 
     <!-- GAME START 대기 화면 — 광고 없음 (PRD 3.2) -->
@@ -58,9 +57,8 @@
         </div>
       </div>
       <!-- 배너는 dimmed 레이어 위에 렌더 (PRD 3.4) -->
-      <div class="banner" id="banner-gameover">
-        <!-- ADSENSE_SLOT_GAMEOVER -->
-      </div>
+      <!-- ADSENSE_SLOT_GAMEOVER (dodge-gameover) — 오버레이 첫 표시 때 ads.js가 ins 동적 생성 -->
+      <div class="banner" id="banner-gameover"></div>
     </div>
 
     <!-- 일시정지 오버레이 (PRD 4.6) -->
@@ -86,6 +84,10 @@
       <div class="game__guide-ring"><div class="game__guide-knob"></div></div>
       <p class="game__guide-text">아무 곳이나 터치해서 조작</p>
     </div>
+
+    <!-- PC 와이드 좌우 여백 사이드 광고 (dodge-side) — 여백 폭이 충분할 때만 ads.js가 표시·ins 동적 생성 -->
+    <div class="game__side-ad game__side-ad--left" id="side-ad-left" hidden></div>
+    <div class="game__side-ad game__side-ad--right" id="side-ad-right" hidden></div>
   </div>
 
   <!-- 게임 진입점 스크립트 (ES 모듈) -->
