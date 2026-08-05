@@ -14,8 +14,11 @@ const keyState = {
 
 // 스페이스바가 눌렸을 때 호출될 콜백 (일시정지 토글)
 let onSpaceCallback = null;
-// Enter 키가 눌렸을 때 호출될 콜백 (READY 화면 게임 시작)
+// Enter 키가 눌렸을 때 호출될 콜백 (캐릭터 선택 확정 / READY 화면 게임 시작)
 let onEnterCallback = null;
+// 방향키가 눌렸을 때 호출될 콜백 (캐릭터 선택 화면 내비게이션 — 'up'|'down'|'left'|'right')
+// 이동용 keyState와 별개로, 누르는 순간마다 1회씩 호출된다 (키 반복 허용 — 빠른 탐색용)
+let onArrowCallback = null;
 
 // --- 플로팅 조이스틱 상태 ---
 // 화면 어디를 터치해도 그 지점이 중심이 되고, 드래그 방향으로 이동 (PRD 4.1)
@@ -41,10 +44,22 @@ let activeTouchCount = 0;
 // --- 키보드 이벤트 ---
 function handleKeyDown(event) {
   switch (event.key) {
-    case 'ArrowUp': keyState.up = true; break;
-    case 'ArrowDown': keyState.down = true; break;
-    case 'ArrowLeft': keyState.left = true; break;
-    case 'ArrowRight': keyState.right = true; break;
+    case 'ArrowUp':
+      keyState.up = true;
+      if (onArrowCallback) onArrowCallback('up');
+      break;
+    case 'ArrowDown':
+      keyState.down = true;
+      if (onArrowCallback) onArrowCallback('down');
+      break;
+    case 'ArrowLeft':
+      keyState.left = true;
+      if (onArrowCallback) onArrowCallback('left');
+      break;
+    case 'ArrowRight':
+      keyState.right = true;
+      if (onArrowCallback) onArrowCallback('right');
+      break;
     case ' ':
       // 스페이스바의 페이지 스크롤 기본 동작 차단 (PRD 4.6)
       event.preventDefault();
@@ -161,9 +176,10 @@ function resetJoystick() {
 // --- 공개 API ---
 
 // 입력 리스너 등록 (게임 초기화 시 1회 호출)
-export function initInput(targetEl, { onSpace, onEnter } = {}) {
+export function initInput(targetEl, { onSpace, onEnter, onArrow } = {}) {
   onSpaceCallback = onSpace || null;
   onEnterCallback = onEnter || null;
+  onArrowCallback = onArrow || null;
   window.addEventListener('keydown', handleKeyDown);
   window.addEventListener('keyup', handleKeyUp);
   // CSS touch-action: none 하에서 preventDefault 없이도 스크롤은 차단되지만,

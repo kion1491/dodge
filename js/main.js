@@ -49,6 +49,8 @@ let gameOverUnlocked = false;
 
 // 일시정지 재개 카운트 — 0보다 크면 재개 대기 중 (0.5초 후 PLAYING 복귀)
 let resumeCountdown = 0;
+// 캐릭터 선택 화면의 키보드 하이라이트 인덱스 (CHARACTERS 배열 기준, 2열 그리드)
+let selectHighlightIndex = 0;
 // 조이스틱 가이드 표시 여부 — 페이지 로드당 최초 1회만 (확정 사항)
 let joystickGuideShown = false;
 
@@ -127,8 +129,9 @@ export function setState(next) {
   if (next === STATES.GAME_OVER) {
     enterGameOver();
   }
-  // 초기 화면 복귀 시 최고 기록·선택 하이라이트 최신화
+  // 초기 화면 복귀 시 최고 기록·선택 하이라이트 최신화 (키보드 하이라이트도 현재 캐릭터로 동기화)
   if (next === STATES.CHARACTER_SELECT) {
+    selectHighlightIndex = Math.max(0, CHARACTERS.findIndex((c) => c.id === player.characterId));
     updateSelectScreen(player.characterId, loadBestRecord());
   }
 
@@ -465,6 +468,24 @@ function handleStartGame() {
   }
 }
 
+// 방향키: 캐릭터 선택 화면에서 하이라이트 이동 (2열 그리드 — 좌우 ±1, 상하 ±2, 순환)
+function handleArrowKey(direction) {
+  if (currentState !== STATES.CHARACTER_SELECT) return;
+  const delta = { left: -1, right: 1, up: -2, down: 2 }[direction];
+  const count = CHARACTERS.length;
+  selectHighlightIndex = (selectHighlightIndex + delta + count) % count;
+  updateSelectScreen(CHARACTERS[selectHighlightIndex].id, loadBestRecord());
+}
+
+// Enter: 캐릭터 선택 화면에서는 하이라이트된 캐릭터 확정, READY 화면에서는 게임 시작
+function handleEnterKey() {
+  if (currentState === STATES.CHARACTER_SELECT) {
+    handleSelectCharacter(CHARACTERS[selectHighlightIndex].id);
+  } else {
+    handleStartGame();
+  }
+}
+
 // RESTART → READY (캐릭터 유지)
 function handleRestart() {
   if (currentState === STATES.GAME_OVER && gameOverUnlocked) {
@@ -539,8 +560,12 @@ function updateOrientationOverlay() {
 
 // --- 초기화 및 루프 시작 ---
 initViewport(canvas, container);
-// Enter는 READY 화면에서만 동작 (handleStartGame 내부에서 상태 가드)
-initInput(container, { onSpace: handleSpaceKey, onEnter: handleStartGame });
+// Enter: 선택 확정/게임 시작, 방향키: 선택 화면 내비게이션 (각 핸들러 내부에서 상태 가드)
+initInput(container, {
+  onSpace: handleSpaceKey,
+  onEnter: handleEnterKey,
+  onArrow: handleArrowKey,
+});
 initUi({
   onSelectCharacter: handleSelectCharacter,
   onStartGame: handleStartGame,
@@ -555,7 +580,8 @@ window.addEventListener('resize', updateOrientationOverlay);
 window.matchMedia('(orientation: landscape)').addEventListener('change', updateOrientationOverlay);
 updateOrientationOverlay();
 
-// 초기 화면 표시 (프리셀렉트 하이라이트 + 최고 기록)
+// 초기 화면 표시 (프리셀렉트 하이라이트 + 최고 기록, 키보드 하이라이트 동기화)
+selectHighlightIndex = Math.max(0, CHARACTERS.findIndex((c) => c.id === player.characterId));
 updateSelectScreen(player.characterId, loadBestRecord());
 syncScreen(currentState);
 requestAnimationFrame(runFrame);
