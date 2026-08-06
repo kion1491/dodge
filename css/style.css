@@ -253,6 +253,20 @@ body {
   cursor: pointer;
 }
 
+/* 기록 공유 — RESTART(주요)와 초기화면으로(보조) 사이의 중간 위계 */
+.gameover__share {
+  border: 2px solid rgba(244, 239, 230, 0.45);
+  border-radius: 999px;
+  background: none;
+  /* 문구가 "복사되었습니다" 등으로 바뀌어도 버튼 폭이 흔들리지 않도록 */
+  min-width: 168px;
+  padding: 10px 24px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #f4efe6;
+  cursor: pointer;
+}
+
 .gameover__home {
   border: none;
   background: none;

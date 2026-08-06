@@ -16,10 +16,12 @@ import { resetEntities, updateEntities, renderEntities } from './entities.js';
 import {
   initUi, syncScreen, updateSelectScreen, showGameOverResult, unlockGameOverActions,
   setPausedHint, setRotateOverlayVisible, showJoystickGuide, hideJoystickGuide,
+  showShareFeedback,
 } from './ui.js';
 import {
   loadBestRecord, saveBestRecord, loadLastCharacter, saveLastCharacter,
 } from './storage.js';
+import { shareRecord } from './share.js';
 import { initAds, loadGameoverAd } from './ads.js';
 
 // --- 게임 상태 정의 ---
@@ -487,6 +489,9 @@ function handleArrowKey(direction) {
 function handleEnterKey() {
   if (currentState === STATES.CHARACTER_SELECT) {
     handleSelectCharacter(CHARACTERS[selectHighlightIndex].id);
+  } else if (currentState === STATES.GAME_OVER) {
+    // 게임오버에서 Enter는 RESTART와 동일 (0.8초 입력 잠금은 handleRestart가 지킨다)
+    handleRestart();
   } else {
     handleStartGame();
   }
@@ -496,6 +501,20 @@ function handleEnterKey() {
 function handleRestart() {
   if (currentState === STATES.GAME_OVER && gameOverUnlocked) {
     setState(STATES.READY);
+  }
+}
+
+// 기록 공유 — 공유 시트 또는 클립보드 복사, 결과를 버튼 문구로 알린다
+async function handleShare() {
+  if (currentState !== STATES.GAME_OVER || !gameOverUnlocked) return;
+
+  const result = await shareRecord(loadBestRecord());
+  // 'shared'는 공유 시트가 처리했고, 'canceled'는 사용자가 스스로 닫은 것이라
+  // 별도 안내가 오히려 방해가 된다 — 대체 경로로 갔을 때만 문구를 바꾼다
+  if (result === 'copied') {
+    showShareFeedback('복사되었습니다');
+  } else if (result === 'failed') {
+    showShareFeedback('공유할 수 없습니다');
   }
 }
 
@@ -576,6 +595,7 @@ initUi({
   onSelectCharacter: handleSelectCharacter,
   onStartGame: handleStartGame,
   onRestart: handleRestart,
+  onShare: handleShare,
   onGoHome: handleGoHome,
   onResume: requestResume,
 });

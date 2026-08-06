@@ -79,6 +79,8 @@
         <!-- 0.8초 입력 잠금 동안 페이드인으로 서서히 나타나는 버튼 영역 (PRD 3.4) -->
         <div class="gameover__actions gameover__actions--locked" id="gameover-actions">
           <button class="gameover__restart" id="gameover-restart" type="button" disabled>RESTART</button>
+          <!-- 기록 공유: 모바일은 공유 시트, 미지원 환경은 클립보드 복사로 대체 (share.js) -->
+          <button class="gameover__share" id="gameover-share" type="button" disabled>기록 공유</button>
           <button class="gameover__home" id="gameover-home" type="button" disabled>초기화면으로</button>
         </div>
       </div>

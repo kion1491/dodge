@@ -21,6 +21,7 @@ const gameoverBestEl = document.getElementById('gameover-best');
 const gameoverNewRecordEl = document.getElementById('gameover-new-record');
 const gameoverActionsEl = document.getElementById('gameover-actions');
 const gameoverRestartEl = document.getElementById('gameover-restart');
+const gameoverShareEl = document.getElementById('gameover-share');
 const gameoverHomeEl = document.getElementById('gameover-home');
 const pausedHintEl = document.getElementById('paused-hint');
 const rotateEl = document.getElementById('screen-rotate');
@@ -30,7 +31,7 @@ const joystickGuideEl = document.getElementById('joystick-guide');
 const SLOT_PREVIEW_SIZE = 88;
 
 // UI 초기화 — 콜백을 연결하고 캐릭터 그리드를 생성한다
-export function initUi({ onSelectCharacter, onStartGame, onRestart, onGoHome, onResume }) {
+export function initUi({ onSelectCharacter, onStartGame, onRestart, onGoHome, onResume, onShare }) {
   buildSelectGrid(onSelectCharacter);
 
   // READY 화면: 아무 곳이나 클릭/터치로 시작 (click은 터치 종료 후 발생하므로
@@ -39,6 +40,7 @@ export function initUi({ onSelectCharacter, onStartGame, onRestart, onGoHome, on
 
   // 게임오버 버튼
   gameoverRestartEl.addEventListener('click', onRestart);
+  gameoverShareEl.addEventListener('click', onShare);
   gameoverHomeEl.addEventListener('click', onGoHome);
 
   // 일시정지 화면: 터치/클릭으로 재개 요청 (모바일 재개 경로 — PRD 4.6)
@@ -99,6 +101,8 @@ export function showGameOverResult({ current, best, isNewRecord }) {
   gameoverCurrentEl.textContent = current.toFixed(2);
   gameoverBestEl.textContent = best.toFixed(2);
   gameoverNewRecordEl.hidden = !isNewRecord;
+  // 이전 판의 공유 결과 문구가 남아 있지 않도록 되돌린다
+  resetShareLabel();
   lockGameOverActions();
 }
 
@@ -106,6 +110,7 @@ export function showGameOverResult({ current, best, isNewRecord }) {
 function lockGameOverActions() {
   gameoverActionsEl.classList.add('gameover__actions--locked');
   gameoverRestartEl.disabled = true;
+  gameoverShareEl.disabled = true;
   gameoverHomeEl.disabled = true;
 }
 
@@ -113,7 +118,29 @@ function lockGameOverActions() {
 export function unlockGameOverActions() {
   gameoverActionsEl.classList.remove('gameover__actions--locked');
   gameoverRestartEl.disabled = false;
+  gameoverShareEl.disabled = false;
   gameoverHomeEl.disabled = false;
+}
+
+// --- 기록 공유 버튼 피드백 ---
+
+// 공유 버튼 기본 문구 — 피드백 표시 후 이 문구로 되돌아간다
+const SHARE_LABEL = '기록 공유';
+// 피드백 문구를 유지하는 시간(ms)
+const SHARE_FEEDBACK_TIME = 2000;
+let shareFeedbackTimerId = null;
+
+// 공유 결과를 버튼 문구로 잠깐 알린다 (별도 토스트 없이 제자리에서 피드백)
+export function showShareFeedback(message) {
+  window.clearTimeout(shareFeedbackTimerId);
+  gameoverShareEl.textContent = message;
+  shareFeedbackTimerId = window.setTimeout(resetShareLabel, SHARE_FEEDBACK_TIME);
+}
+
+// 공유 버튼 문구를 기본값으로 되돌린다
+function resetShareLabel() {
+  window.clearTimeout(shareFeedbackTimerId);
+  gameoverShareEl.textContent = SHARE_LABEL;
 }
 
 // 일시정지 안내 문구 설정 — 기기 입력 방식에 맞는 문구만 표시 (PRD 4.6)
