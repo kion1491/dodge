@@ -28,6 +28,11 @@ function updateSize() {
   canvasEl.style.width = `${cssWidth}px`;
   canvasEl.style.height = `${cssHeight}px`;
 
+  // 필드 폭을 CSS에 노출한다 — 하단 배너가 창 전체가 아닌 필드 폭에 맞춰지도록.
+  // 배너는 창 전체를 덮는 오버레이 안에 있어서, 이 값이 없으면 와이드 모니터에서
+  // 3440×90 같은 비표준 크기를 요청하게 되고 애드센스가 채우지 못한다(unfilled).
+  containerEl.style.setProperty('--field-width', `${cssWidth}px`);
+
   // 내부 해상도는 devicePixelRatio까지 반영해 선명하게 유지
   const dpr = window.devicePixelRatio || 1;
   canvasEl.width = Math.round(cssWidth * dpr);

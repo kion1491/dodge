@@ -393,6 +393,16 @@ body {
 .banner {
   flex: none;
   width: 100%;
+  /* 배너는 창 전체를 덮는 오버레이 안에 있어 기본값이 "창 폭"이 된다.
+     와이드 모니터에서는 그대로 두면 3440×90 같은 비표준 크기를 요청해
+     애드센스가 채우지 못하므로(unfilled), 게임 필드 폭으로 제한한다.
+     --field-width는 viewport.js가 리사이즈마다 갱신 (미설정 시 창 폭으로 폴백).
+     오버레이가 align-items: center라 별도 마진 없이 가운데 정렬된다. */
+  max-width: var(--field-width, 100%);
+  /* 애드센스는 ins 안에 display:inline-block 호스트를 넣는다. 실제 게재되는
+     광고(320×50 등)가 컨테이너보다 좁으면 정렬 지정이 없어 왼쪽에 붙어버리므로
+     가운데로 모은다 (text-align은 상속되어 .banner__unit까지 적용된다) */
+  text-align: center;
   /* 모바일: 320×50 배너 기준 고정 높이 — 광고 미로드 시에도 유지 */
   height: 50px;
   background-color: rgba(0, 0, 0, 0.08);
