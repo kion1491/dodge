@@ -95,7 +95,11 @@ function handleTouchStart(event) {
   // 이미 조작 중이면 추가 터치(멀티터치)는 무시
   if (joystick.active) return;
 
-  const touch = event.changedTouches[0];
+  startJoystickAt(event.changedTouches[0]);
+}
+
+// 주어진 터치 지점을 중심으로 조이스틱을 새로 세운다 (최초 터치 / 손가락 교체 시 공용)
+function startJoystickAt(touch) {
   joystick.active = true;
   joystick.touchId = touch.identifier;
   joystick.centerX = touch.clientX;
@@ -118,9 +122,15 @@ function handleTouchMove(event) {
 
 function handleTouchEnd(event) {
   activeTouchCount = event.touches.length;
-  // 추적 중인 터치가 끝났으면 조이스틱 소멸
+  // 추적 중인 터치가 끝난 경우
   if (joystick.active && findTrackedTouch(event.changedTouches)) {
-    resetJoystick();
+    // 화면에 아직 다른 손가락이 남아 있으면 그 손가락이 조작을 즉시 이어받는다.
+    // (손가락을 바꿔 짚는 동안 조작이 완전히 죽어버리는 구간을 없앤다)
+    if (!touchSuppressed && event.touches.length > 0) {
+      startJoystickAt(event.touches[0]);
+    } else {
+      resetJoystick();
+    }
   }
   // 모든 터치가 끝나면 억제 해제 — "떼고 나서 다음 터치부터 조작"
   if (event.touches.length === 0) {
@@ -138,9 +148,22 @@ function findTrackedTouch(changedTouches) {
 
 // 드래그 벡터를 8방향 디지털로 스냅한다 (아날로그 속도 조절 없음)
 function updateJoystickDirection() {
-  const dx = joystick.currentX - joystick.centerX;
-  const dy = joystick.currentY - joystick.centerY;
-  const distance = Math.hypot(dx, dy);
+  // 중심 추종: 손가락이 MAX_RADIUS 밖으로 나가면 초과분만큼 중심을 끌고 온다.
+  // 중심과 손가락의 거리가 항상 MAX_RADIUS 이하로 유지되므로, 반대 방향으로 꺾는 데
+  // 필요한 손가락 이동거리가 (MAX_RADIUS + DEAD_ZONE)으로 상한이 잡힌다.
+  // 중심을 고정하면 이 거리가 무제한으로 늘어나 조작이 "느리게" 느껴진다.
+  let dx = joystick.currentX - joystick.centerX;
+  let dy = joystick.currentY - joystick.centerY;
+  let distance = Math.hypot(dx, dy);
+
+  if (distance > JOYSTICK.MAX_RADIUS) {
+    const excess = distance - JOYSTICK.MAX_RADIUS;
+    joystick.centerX += (dx / distance) * excess;
+    joystick.centerY += (dy / distance) * excess;
+    dx = joystick.currentX - joystick.centerX;
+    dy = joystick.currentY - joystick.centerY;
+    distance = JOYSTICK.MAX_RADIUS;
+  }
 
   // 데드존: 미세 움직임으로 캐릭터가 움찔거리는 것 방지
   if (distance < JOYSTICK.DEAD_ZONE) {
