@@ -448,11 +448,12 @@ function renderJoystick() {
   ctx.lineWidth = 4;
   ctx.stroke();
 
-  // 방향 노브 (8방향 스냅 결과를 표시)
-  const knobDist = radius * 0.6;
-  const length = Math.hypot(joystick.dirX, joystick.dirY) || 1;
-  const knobX = center.x + (joystick.dirX / length) * knobDist;
-  const knobY = center.y + (joystick.dirY / length) * knobDist;
+  // 방향 노브 — 손가락이 밀어낸 방향·정도를 그대로 반영한다.
+  // 예전에는 8방향 스냅 결과를 항상 최대 거리에 그려서, 손가락은 부드럽게 움직이는데
+  // 노브만 8개 지점을 순간이동했다. 화면이 손가락을 따라오지 않으니 조작이 겉돌아 보였다.
+  const knobDist = radius * 0.6 * joystick.deflection;
+  const knobX = center.x + joystick.dirX * knobDist;
+  const knobY = center.y + joystick.dirY * knobDist;
   ctx.beginPath();
   ctx.arc(knobX, knobY, radius * 0.35, 0, Math.PI * 2);
   ctx.fillStyle = 'rgba(90, 83, 71, 0.45)';

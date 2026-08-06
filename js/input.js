@@ -1,6 +1,7 @@
 // ============================================================
 // 입력 관리 — PC 키보드(방향키 8방향) + 모바일 플로팅 조이스틱
-// 두 입력 모두 "8방향 디지털"로 통일해 PC/모바일 조건을 동일하게 유지 (PRD 4.1)
+// 키보드는 물리적으로 8방향뿐이고, 조이스틱은 손가락 각도를 그대로 쓴다.
+// 두 경로 모두 속도는 일정하며 방향만 다르게 만든다 (updateJoystickDirection 주석 참고)
 // ============================================================
 import { JOYSTICK } from './constants.js';
 
@@ -29,8 +30,9 @@ const joystick = {
   centerY: 0,
   currentX: 0,       // 현재 드래그 위치 (화면 좌표)
   currentY: 0,
-  dirX: 0,           // 8방향 디지털 스냅 결과 (-1 | 0 | 1)
+  dirX: 0,           // 이동 방향 단위 벡터 (손가락 각도 그대로 — 스냅 없음)
   dirY: 0,
+  deflection: 0,     // 중심에서 밀어낸 정도 0~1 (노브 표시 전용, 이동 속도와 무관)
 };
 
 // 게임 시작/재개 터치가 조작으로 이어지지 않도록 하는 억제 플래그.
@@ -108,6 +110,7 @@ function startJoystickAt(touch) {
   joystick.currentY = touch.clientY;
   joystick.dirX = 0;
   joystick.dirY = 0;
+  joystick.deflection = 0;
 }
 
 function handleTouchMove(event) {
@@ -146,7 +149,12 @@ function findTrackedTouch(changedTouches) {
   return null;
 }
 
-// 드래그 벡터를 8방향 디지털로 스냅한다 (아날로그 속도 조절 없음)
+// 드래그 벡터를 이동 방향으로 변환한다.
+// [설계 변경] 손가락 각도를 그대로 쓴다 (8방향 스냅 없음, 아날로그 속도 조절도 없음).
+// 스냅 방식은 손가락이 가리키는 방향과 캐릭터가 가는 방향이 최대 22.5° 어긋나
+// 0.5초만 이동해도 의도한 위치에서 판정원 지름(31px)의 두 배 가까이 벗어났다.
+// PRD는 PC와 조건을 맞추려고 스냅을 택했지만, 기록은 localStorage에만 남는
+// 기기별 개인 기록이라 맞춰야 할 순위 경쟁이 존재하지 않는다.
 function updateJoystickDirection() {
   // 중심 추종: 손가락이 MAX_RADIUS 밖으로 나가면 초과분만큼 중심을 끌고 온다.
   // 중심과 손가락의 거리가 항상 MAX_RADIUS 이하로 유지되므로, 반대 방향으로 꺾는 데
@@ -169,23 +177,15 @@ function updateJoystickDirection() {
   if (distance < JOYSTICK.DEAD_ZONE) {
     joystick.dirX = 0;
     joystick.dirY = 0;
+    joystick.deflection = 0;
     return;
   }
 
-  // 각도를 45°(π/4) 단위 8분면으로 스냅 → (-1|0|1) 조합
-  const octant = Math.round(Math.atan2(dy, dx) / (Math.PI / 4));
-  const snapped = ((octant % 8) + 8) % 8; // 음수 각도 보정 (0~7)
-  const DIRECTIONS = [
-    [1, 0],   // 0: 오른쪽
-    [1, 1],   // 1: 오른쪽 아래
-    [0, 1],   // 2: 아래
-    [-1, 1],  // 3: 왼쪽 아래
-    [-1, 0],  // 4: 왼쪽
-    [-1, -1], // 5: 왼쪽 위
-    [0, -1],  // 6: 위
-    [1, -1],  // 7: 오른쪽 위
-  ];
-  [joystick.dirX, joystick.dirY] = DIRECTIONS[snapped];
+  // 손가락이 가리키는 방향을 그대로 단위 벡터로 (속도는 방향과 무관하게 일정)
+  joystick.dirX = dx / distance;
+  joystick.dirY = dy / distance;
+  // 노브를 손가락 위치에 맞춰 그리기 위한 밀어낸 정도 (0~1) — 렌더 전용
+  joystick.deflection = distance / JOYSTICK.MAX_RADIUS;
 }
 
 // 조이스틱 상태 초기화 (터치 종료 시)
@@ -194,6 +194,7 @@ function resetJoystick() {
   joystick.touchId = null;
   joystick.dirX = 0;
   joystick.dirY = 0;
+  joystick.deflection = 0;
 }
 
 // --- 공개 API ---
