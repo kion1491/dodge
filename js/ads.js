@@ -19,9 +19,11 @@ const SLOT_SIDE = '7031537079';     // dodge-side (PC 좌우 여백, 양쪽 재�
 // 사이드 광고 폭 티어 — 여백이 충분하면 300px, 좁으면 160px (표준 스카이스크래퍼 폭)
 const SIDE_TIER_WIDE = 300;
 const SIDE_TIER_NARROW = 160;
-// 티어별 최소 여백 폭 (광고 폭 + 좌우 숨쉴 공간)
-const SIDE_MARGIN_WIDE = 340;
-const SIDE_MARGIN_NARROW = 200;
+// 광고 폭에 더해 확보할 좌우 숨쉴 공간 (티어 최소 여백·락 해제 임계값에 공용)
+const SIDE_MARGIN_BUFFER = 40;
+// 티어별 최소 여백 폭
+const SIDE_MARGIN_WIDE = SIDE_TIER_WIDE + SIDE_MARGIN_BUFFER;
+const SIDE_MARGIN_NARROW = SIDE_TIER_NARROW + SIDE_MARGIN_BUFFER;
 // 세로 600px 광고가 들어갈 최소 화면 높이
 const SIDE_MIN_HEIGHT = 640;
 
@@ -38,6 +40,9 @@ function createAdUnit(container, slotId, unitClassName) {
   ins.className = `adsbygoogle ${unitClassName}`;
   ins.setAttribute('data-ad-client', AD_CLIENT);
   ins.setAttribute('data-ad-slot', slotId);
+  // [의도적 생략] data-ad-format="auto"/data-full-width-responsive를 넣지 않는다 —
+  // 반응형 유닛의 크기를 CSS(래퍼)로 고정하는 공식 "광고 코드 수정" 패턴.
+  // auto를 넣으면 모바일에서 50px 배너 컨테이너를 무시하고 세로로 확장될 수 있다
   container.appendChild(ins);
 
   // 애드센스 스크립트가 차단(광고 차단기 등)돼도 배열 push라 에러 없이 무시된다
@@ -66,7 +71,7 @@ function updateSideAds() {
   }
   if (sideLockedTier) {
     // 로드된 폭보다 여백이 좁아지면 숨기고, 다시 넓어지면 같은 폭으로 재표시
-    tier = margin >= sideLockedTier + 40 && containerHeight >= SIDE_MIN_HEIGHT
+    tier = margin >= sideLockedTier + SIDE_MARGIN_BUFFER && containerHeight >= SIDE_MIN_HEIGHT
       ? sideLockedTier
       : 0;
   }
