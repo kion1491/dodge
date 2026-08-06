@@ -50,8 +50,41 @@ function randomRange(min, max) {
 function getUnlockedTypes(elapsed) {
   const types = ['fall'];
   if (elapsed >= PHASE.HORIZONTAL_AT) types.push('horizontal');
+  if (elapsed >= PHASE.RISE_AT) types.push('rise');
   if (elapsed >= PHASE.DIAGONAL_AT) types.push('diagonal');
   return types;
+}
+
+// 위(fall)·아래(rise)에서 들어오는 탄을 생성한다.
+// 개체마다 진입 각도를 따로 뽑아 서로 다른 경로를 그리게 한다.
+// 각도만 무작위로 두면 가장자리에서 나온 비스듬한 탄이 곧바로 옆으로 빠지므로,
+// "그 각도로 필드를 MIN_TRAVERSAL 이상 지날 수 있는" 구간에서만 생성 위치를 고른다.
+// 생성 위치·각도·속도 모두 플레이어 위치와 무관하다 (조준탄 금지 — PRD 4.2)
+function spawnVertical(type, size, speed) {
+  const half = size / 2;
+  const fromTop = type === 'fall';
+
+  // 수직 기준 진입 각도 — 양수면 오른쪽, 음수면 왼쪽으로 흐른다
+  const maxAngle = (OBSTACLE.VERTICAL_ANGLE_MAX * Math.PI) / 180;
+  const angle = randomRange(-maxAngle, maxAngle);
+
+  // 이 각도로 필드 높이의 MIN_TRAVERSAL 만큼 내려오는 동안의 가로 이동량
+  const drift = Math.abs(Math.tan(angle)) * FIELD.HEIGHT * OBSTACLE.MIN_TRAVERSAL;
+  // 흐르는 방향 쪽 가장자리에 drift 만큼 여유가 남는 위치에서만 생성한다
+  let minX = half;
+  let maxX = FIELD.WIDTH - half;
+  if (angle > 0) maxX = Math.max(minX, maxX - drift);
+  else minX = Math.min(maxX, minX + drift);
+
+  obstacles.push({
+    type,
+    size,
+    x: randomRange(minX, maxX),
+    y: fromTop ? -half : FIELD.HEIGHT + half,
+    vx: Math.sin(angle) * speed,
+    // 위에서 온 탄은 아래로, 아래에서 온 탄은 위로
+    vy: (fromTop ? 1 : -1) * Math.cos(angle) * speed,
+  });
 }
 
 // 장애물 하나를 스폰한다 — 위치는 전부 필드 밖, 조준탄 금지 (PRD 4.2)
@@ -59,18 +92,14 @@ function spawnObstacle(elapsed) {
   const types = getUnlockedTypes(elapsed);
   const type = types[Math.floor(Math.random() * types.length)];
   const size = randomRange(OBSTACLE.SIZE_MIN, OBSTACLE.SIZE_MAX);
-  const speed = getObstacleSpeed(elapsed);
+  // 개체별 속도 편차 — 같은 시점에 나온 탄들이 한 덩어리로 움직이지 않게 한다
+  const speed = getObstacleSpeed(elapsed)
+    * randomRange(OBSTACLE.SPEED_JITTER_MIN, OBSTACLE.SPEED_JITTER_MAX);
   const half = size / 2;
 
-  if (type === 'fall') {
-    // 낙하 탄: 상단 밖에서 x 랜덤, 수직 낙하
-    obstacles.push({
-      type, size,
-      x: randomRange(half, FIELD.WIDTH - half),
-      y: -half,
-      vx: 0,
-      vy: speed,
-    });
+  if (type === 'fall' || type === 'rise') {
+    // 위·아래 탄: 개체마다 다른 진입 각도 (spawnVertical 주석 참고)
+    spawnVertical(type, size, speed);
   } else if (type === 'horizontal') {
     // 수평 탄: 좌/우 밖에서 y 랜덤, 수평 이동
     const fromLeft = Math.random() < 0.5;

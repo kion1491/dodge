@@ -356,6 +356,8 @@ function renderPhaseWarning() {
   // 수평 탄 경고: 좌/우 가장자리 · 대각선 탄 경고: 상단 + 좌/우 가장자리
   const warnings = [
     { at: PHASE.HORIZONTAL_AT, edges: ['left', 'right'] },
+    // 아래에서 올라오는 탄은 캐릭터가 머무는 하단을 직접 노리므로 예고가 특히 중요하다
+    { at: PHASE.RISE_AT, edges: ['bottom'] },
     { at: PHASE.DIAGONAL_AT, edges: ['top', 'left', 'right'] },
   ];
   for (const warning of warnings) {
@@ -370,6 +372,7 @@ function renderPhaseWarning() {
       if (edge === 'left') ctx.fillRect(0, 0, thickness, FIELD.HEIGHT);
       if (edge === 'right') ctx.fillRect(FIELD.WIDTH - thickness, 0, thickness, FIELD.HEIGHT);
       if (edge === 'top') ctx.fillRect(0, 0, FIELD.WIDTH, thickness);
+      if (edge === 'bottom') ctx.fillRect(0, FIELD.HEIGHT - thickness, FIELD.WIDTH, thickness);
     }
 
     // "!" 표시 — 경고 방향 가장자리 중앙에
@@ -381,6 +384,7 @@ function renderPhaseWarning() {
       if (edge === 'left') ctx.fillText('!', 60, FIELD.HEIGHT / 2);
       if (edge === 'right') ctx.fillText('!', FIELD.WIDTH - 60, FIELD.HEIGHT / 2);
       if (edge === 'top') ctx.fillText('!', FIELD.WIDTH / 2, 70);
+      if (edge === 'bottom') ctx.fillText('!', FIELD.WIDTH / 2, FIELD.HEIGHT - 70);
     }
   }
 }
